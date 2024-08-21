@@ -1,3 +1,6 @@
+# typed: true
+require 'sorbet-runtime'
+
 # EN: Imagine you work on an application that checks if an automobile was speeding
 # and the whole application uses the metric system.
 # Your boss tells you that you will be integrating with an external application
@@ -14,22 +17,24 @@
 # RU: Это класс скорости, он содержит значение скорости и единицу
 #
 class Speed
+  extend T::Sig
   include Comparable
+
+  sig { returns(Float) }
   attr_reader :value
 
+  sig { params(value: T.any(Float, Integer)).void }
   def initialize(value)
-    @value = value
+    @value = value.to_f
   end
 
+  sig { returns(String) }
   def unit
     raise NotImplementedError,
           "#{self.class} has not implemented method '#{__method__}'"
   end
 
-  # EN: We raise an error if we try to compare speeds with different units
-  #
-  # RU: Мы поднимаем ошибку, если попытаемся сравнивать скорости с разными единицами
-  #
+  sig { params(other: Speed).returns(T.nilable(Integer)) }
   def <=>(other)
     raise 'The speeds have different units' if unit != other.unit
 
@@ -42,6 +47,9 @@ end
 # RU: Это класс, который наиболее используется во внутренней системе.
 #
 class KilometersSpeed < Speed
+  extend T::Sig
+
+  sig { returns(String) }
   def unit
     'km/h'
   end
@@ -52,6 +60,9 @@ end
 # RU: Это тот тип данных, которые вы получите от внешнего API
 #
 class MilesSpeed < Speed
+  extend T::Sig
+
+  sig { returns(String) }
   def unit
     'mi/h'
   end
@@ -62,8 +73,11 @@ end
 # RU: Этот класс проверяет, если скорость выше или ниже максимального предела
 #
 class KilometersSpeedLimit
-  MAX_LIMIT = KilometersSpeed.new(100)
+  extend T::Sig
 
+  MAX_LIMIT = T.let(KilometersSpeed.new(100), KilometersSpeed)
+
+  sig { params(speed: Speed).void }
   def self.speeding?(speed)
     if speed > MAX_LIMIT
       puts "(#{speed.value}#{speed.unit}) You are speeding"
@@ -79,10 +93,14 @@ end
 # RU: Это адаптер, который преобразует скорость с миль в час в километры в час
 #
 class KilometersAdaptor < MilesSpeed
+  extend T::Sig
+
+  sig { params(speed: MilesSpeed).void }
   def initialize(speed)
     @value = speed.value * 1.61
   end
 
+  sig { returns(String) }
   def unit
     'km/h'
   end
