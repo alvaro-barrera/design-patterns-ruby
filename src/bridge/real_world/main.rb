@@ -1,3 +1,6 @@
+# typed: true
+require 'sorbet-runtime'
+
 # EN: This is a real life example of a bridge pattern usage.
 # The main concept is that from the Abstraction (Device) and Implementation
 # (BasicRemote) different teams can create new subclasses without interfering
@@ -8,7 +11,13 @@
 # могут создавать новые подклассы, не мешая друг другу.
 #
 class Device
-  attr_accessor :channel, :volume
+  extend T::Sig
+
+  sig { returns(Integer) }
+  attr_accessor :channel
+
+  sig { returns(Integer) }
+  attr_accessor :volume
 
   def initialize
     @enabled = false
@@ -16,18 +25,22 @@ class Device
     @channel = 1
   end
 
+  sig { returns(T::Boolean) }
   def enabled?
     @enabled
   end
 
+  sig { void }
   def enable
     @enabled = true
   end
 
+  sig { void }
   def disable
     @enabled = false
   end
 
+  sig { void }
   def print_status
     raise NotImplementedError,
           "#{self.class} has not implemented method '#{__method__}'"
@@ -35,6 +48,9 @@ class Device
 end
 
 class Radio < Device
+  extend T::Sig
+
+  sig { void }
   def print_status
     puts <<~TEXT
       ------------------------------------
@@ -48,6 +64,9 @@ class Radio < Device
 end
 
 class Tv < Device
+  extend T::Sig
+
+  sig { void }
   def print_status
     puts <<~TEXT
       ------------------------------------
@@ -61,33 +80,45 @@ class Tv < Device
 end
 
 class BasicRemote
+  extend T::Sig
+
+  sig { params(device: Device).void }
+
   def initialize(device)
     @device = device
   end
 
+  sig { void }
   def power
     puts 'Remote: power toggle'
     @device.enabled? ? @device.disable : @device.enable
   end
 
+  sig { void }
   def volume_down
     @device.volume -= 10
   end
 
+  sig { void }
   def volume_up
     @device.volume += 10
   end
 
+  sig { void }
   def channel_down
     @device.channel -= 1
   end
 
+  sig { void }
   def channel_up
     @device.channel += 1
   end
 end
 
 class AdvancedRemote < BasicRemote
+  extend T::Sig
+
+  sig { void }
   def mute
     @device.volume = 0
   end
